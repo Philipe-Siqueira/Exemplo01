@@ -3,7 +3,7 @@ const app = express();
 const appName = 'Modulo01';
 const port = 80;
 app.use(express.json());
-
+let numberOfRequests = 0;
 const projects = [
   {id:"0", title:"BootCamp RocketSeat", tasks:["Ver Modulos","Fazer Desafios"]},
   {id:"1", title:"Estudar Inglês", tasks:["Assistir aulas", "Praticar Speak"]},
@@ -20,14 +20,19 @@ app.get('/', (req,res) =>{
 
 //Midware
 app.use((req,res,next) =>{
-  console.log(`Requisição: ${req.url} Método: ${req.method}`);
+  numberOfRequests++;
+  console.log(`Requisição: ${req.url} Quantidade: ${numberOfRequests} Método: ${req.method}`);
   return next();
 });
 
 //Verifica se Existe o projeto
 function checkProjectsExists(req, res, next) {
-  if(!req.body.id){
-    return res.status(400).json({error: "User undefined on body request"})
+  const { id } = req.body;
+  console.log(id)
+  const project = projects.find(p => p.id == id);
+  
+  if(!project){
+    return res.status(400).json({error: "Project not found"})
   }
   return next();
 }
@@ -50,7 +55,7 @@ app.get('/projects/:index', checkProjectsInArray, (req,res) =>{
   return res.json(req.project);
 });
 
-app.post('/projects', checkProjectsExists, (req,res) =>{
+app.post('/projects', (req,res) =>{
   const { id, title, tasks } = req.body;
   
   let project = {id, title, tasks};
@@ -70,8 +75,9 @@ app.put('/projects/:index', checkProjectsInArray ,checkProjectsExists, (req,res)
 
 app.delete('/projects/:index', checkProjectsInArray, (req,res) =>{
   const { index } = req.params;
-  
-  projects.splice(index, 1);
+  const projectIndex = projects.findIndex(p => p.id == index)
+
+  projects.splice(projectIndex, 1);
 
   return res.json({message: "Delete ok"});
 });
